@@ -9,7 +9,7 @@
     |   |   | | |  |  \  |   | | |  o   \    | | | 
     o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o 
   -->
-                                                 
+
 <head>
   <title>TransMaxCal-YJG</title>
   <meta charset="UTF-8" />
@@ -19,14 +19,23 @@
 </head>
 
 <body>
-	<div>
-      <input type=text />
-      <button id="process_input">Click to show server local time</button>
-      <p id="result">...</p>
-
-     <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
-   <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
-   </div>
+  <div>
+    <p>Hi!</p>
+    <p>Your computing request of <br />
+     DNA-length = 100nm, <br />
+     force = 10pN, <br />
+     torque = 8pNnm, <br />
+     and max-mode of 14 <br />
+     is received by our server at {{ submit_time }}.</p>
+    <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results. How exciting!</p>
+    <p>This bat will keep flying until the calculation is done!</p>
+    <hr />
+    <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
+    <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
+    <hr />
+    <button id="process_input">Click to show current server local time</button>
+    <p id="result">...</p>
+  </div>
 
   <script
   src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -35,10 +44,10 @@
   <script type=text/javascript>
     $(function() {
         $('#process_input').bind('click', function() {
-            $.getJSON('http://137.132.69.48:7717/jsonshowtime', {
-                proglang: $('input[name="proglang"]').val(),
-            }, function(data) {
-                $("#result").text(data.result);
+            $.getJSON('http://137.132.69.48:7717/jsonshowtime',
+            function(data) {
+                $("#result").text("Localtime of  our computing server is "
+                 + data.result);
             });
             return false;
         });

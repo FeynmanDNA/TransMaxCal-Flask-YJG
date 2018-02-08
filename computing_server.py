@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from time import localtime, strftime
 import subprocess
 
@@ -12,10 +12,12 @@ def hello():
         stdout=subprocess.PIPE, \
         cwd='C:\\Users\\LUMICKS\\Desktop\\Artem').communicate()
     return outs
-    
+
 @app.route('/jsontest/')
 def jsontest():
-    return render_template('TransMaxCal.html')
+    print(request.headers)
+    submit_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    return render_template('TransMaxCal.html', submit_time = submit_time)
 
 @app.route('/jsonshowtime/')
 def jsonshowtime():
