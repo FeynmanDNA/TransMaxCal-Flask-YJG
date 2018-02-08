@@ -15,9 +15,12 @@ def hello():
     
 @app.route('/jsontest/')
 def jsontest():
-    time_json = strftime("%Y-%m-%d %H:%M:%S", localtime())
     return render_template('TransMaxCal.html')
-    
+
+@app.route('/jsonshowtime/')
+def jsonshowtime():
+    time_json = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    return jsonify(result = time_json)
 
 if __name__ == "__main__":
     app.run(host = "0.0.0.0", port = 7717)

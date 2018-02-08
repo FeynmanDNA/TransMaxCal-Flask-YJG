@@ -19,7 +19,11 @@
 </head>
 
 <body>
-	<div class="loader">
+	<div>
+      <input type=text />
+      <button id="process_input">Click to show server local time</button>
+      <p id="result">...</p>
+
      <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
    <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
    </div>
@@ -30,8 +34,8 @@
   crossorigin="anonymous"></script>
   <script type=text/javascript>
     $(function() {
-        $('a#process_input').bind('click', function() {
-            $.getJSON('https://137.132.69.48:7717/jsontest', {
+        $('#process_input').bind('click', function() {
+            $.getJSON('http://137.132.69.48:7717/jsonshowtime', {
                 proglang: $('input[name="proglang"]').val(),
             }, function(data) {
                 $("#result").text(data.result);
