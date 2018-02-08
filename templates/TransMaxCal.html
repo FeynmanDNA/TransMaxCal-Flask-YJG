@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-sg">
+  <!--customized html, css, js by Yang Kaiyuan from Yan Jie Group 2018-->
+  <!--flask backend-->
+  <!--
+  o-O-o                  o   o           o-o     o 
+    |                    |\ /|          /        | 
+    |   o-o  oo o-o  o-o | O |  oo \ / O      oo | 
+    |   |   | | |  |  \  |   | | |  o   \    | | | 
+    o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o 
+  -->
+                                                 
+<head>
+  <title>TransMaxCal-YJG</title>
+  <meta charset="UTF-8" />
+  <meta name="author" content="Yang Kaiyuan from Yan Jie Group" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+</head>
+
+<body>
+	<div class="loader">
+     <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
+   <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
+   </div>
+
+  <script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  <script type=text/javascript>
+    $(function() {
+        $('a#process_input').bind('click', function() {
+            $.getJSON('https://137.132.69.48:7717/jsontest', {
+                proglang: $('input[name="proglang"]').val(),
+            }, function(data) {
+                $("#result").text(data.result);
+            });
+            return false;
+        });
+    });
+  </script>
+
+</body>
+</html>
