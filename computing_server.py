@@ -17,7 +17,17 @@ def hello():
 def jsontest():
     print(request.headers)
     submit_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-    return render_template('TransMaxCal.html', submit_time = submit_time)
+    DNA_length = request.args.get('DNAlength')
+    force = request.args.get('force')
+    torque = request.args.get('torque')
+    max_mode = request.args.get('maxMode')
+    return render_template('TransMaxCal.html', 
+                           submit_time = submit_time,
+                           DNA_length = DNA_length,
+                           force = force,
+                           torque = torque,
+                           max_mode = max_mode
+                           )
 
 @app.route('/jsonshowtime/')
 def jsonshowtime():
