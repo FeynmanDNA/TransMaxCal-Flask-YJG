@@ -30,8 +30,10 @@
     <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results. How exciting!</p>
     <p>This bat will keep flying until the calculation is done!</p>
     <hr />
-    <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
-    <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
+    <div id="bat">
+      <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
+      <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
+    </div><!--bat-->
     <hr />
     <button id="process_input">Click to show current server local time</button>
     <p id="result">...</p>
@@ -42,16 +44,32 @@
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
   <script type=text/javascript>
+    // click to show local server time
     $(function() {
-        $('#process_input').bind('click', function() {
-            $.getJSON('http://137.132.69.48:7717/jsonshowtime',
+        $("#process_input").bind("click", function() {
+            $.getJSON("http://137.132.69.48:7717/jsonshowtime",
             function(data) {
-                $("#result").text("Localtime of  our computing server is "
+                $("#result").text("Localtime of our computing server is "
                  + data.result);
+                 console.log(data);
             });
             return false;
         });
     });
+    // submit parameters to octave_cal
+    $(document).ready(function(){
+        $.getJSON("http://137.132.69.48:7717/octave_cal", 
+        {
+            DNA_length: {{ DNA_length }},
+            force: {{ force }},
+            torque: {{ torque }},
+            max_mode: {{ max_mode }}
+        }, 
+        function(data) {
+            $("#bat").html("<h1>Results:</h1><br />" + data.result)
+        })
+    });
+
   </script>
 
 </body>
