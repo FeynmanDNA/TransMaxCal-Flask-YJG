@@ -3,11 +3,11 @@
   <!--customized html, css, js by Yang Kaiyuan from Yan Jie Group 2018-->
   <!--flask backend-->
   <!--
-  o-O-o                  o   o           o-o     o 
-    |                    |\ /|          /        | 
-    |   o-o  oo o-o  o-o | O |  oo \ / O      oo | 
-    |   |   | | |  |  \  |   | | |  o   \    | | | 
-    o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o 
+  o-O-o                  o   o           o-o     o
+    |                    |\ /|          /        |
+    |   o-o  oo o-o  o-o | O |  oo \ / O      oo |
+    |   |   | | |  |  \  |   | | |  o   \    | | |
+    o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o
   -->
 
 <head>
@@ -30,6 +30,8 @@
     <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results. How exciting!</p>
     <p>This bat will keep flying until the calculation is done!</p>
     <hr />
+    <h2 id="serverMsgInit"></h2>
+    <h1 id="serverMsg"></h1>
     <div id="bat">
       <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
       <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
@@ -47,18 +49,19 @@
     // click to show local server time
     $(function() {
         $("#process_input").bind("click", function() {
-            $.getJSON("http://137.132.69.48:7717/jsonshowtime",
+            $.getJSON("http://137.132.69.48:7717/jsonshowtime/",
             function(data) {
                 $("#result").text("Localtime of our computing server is "
                  + data.result);
-                 console.log(data);
+                 console.log("jsonshowtime's data is ", data);
             });
             return false;
         });
     });
+
     // submit parameters to octave_cal
     $(document).ready(function(){
-        $.getJSON("http://137.132.69.48:7717/octave_cal", 
+        $.getJSON("http://137.132.69.48:7717/octave_cal/",
         {
             DNA_length: {{ DNA_length }},
             force: {{ force }},
@@ -66,9 +69,30 @@
             max_mode: {{ max_mode }}
         }, 
         function(data) {
-            $("#bat").html("<h1>Results:</h1><br />" + data.result)
+            $("#serverMsgInit").text(data.serverMsg);
+            console.log("octave_cal's data is ", data);
         })
     });
+
+    // poll the server status every 15 seconds
+    var myVar = setInterval( function() { 
+        pollServer(); 
+    }, 15000);
+
+    function pollServer() {
+        $.getJSON("http://137.132.69.48:7717/check_computation_status/", 
+        function(data) {
+            if (data.computationStatus == false) {
+                $("#serverMsg").text("Calculating...");
+                console.log("check_computation_statu's data is ", data);
+            } else {
+                clearInterval(myVar);
+                $("#serverMsg").text("Done!");
+                $("#bat").html("<h1>Results:</h1><br />" + data.result);
+                console.log("check_computation_statu's data is now", data);
+            }
+        })
+    }
 
   </script>
 
