@@ -28,7 +28,7 @@ def transmaxcal():
         stdout=subprocess.PIPE, \
         cwd='C:\\Users\\LUMICKS\\Desktop\\Artem')
 
-    return jsonify(serverMsg = "Program Started")
+    return jsonify(serverMsg = "Program Started", computationStarted = True)
 
 @app.route('/kill_transmaxcal/')
 def kill_transmaxcal():
@@ -40,7 +40,12 @@ def kill_transmaxcal():
     if stop_cal == "confirmed":
         cal_proc.kill()
         print("calculation cancelled by user")
+
+        # reset global cal_proc
+        cal_proc = None
+
         return jsonify(confirmedkill = True)
+
     return "kill the boy!"
 
 @app.route('/check_computation_status/')
@@ -56,6 +61,10 @@ def check_computation_status():
         outs = cal_proc.stdout.read().decode('ascii')
         print(outs)
         finish_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+
+        # reset global cal_proc
+        cal_proc = None
+
         return jsonify(computationStatus = True, done_time = finish_time, result = outs)
 
 @app.route('/jsontest/')
