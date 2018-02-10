@@ -62,6 +62,8 @@
                  + data.result);
                  console.log("jsonshowtime's data is ", data);
             });
+            var testgetJson = $.getJSON("http://137.132.69.48:7717/jsonshowtime/");
+            console.log(testgetJson);
             return false;
         });
     });
@@ -110,7 +112,6 @@
                 clearInterval(pollingCall);
                 if (data.result == "") {
                     // if TransMaxCal stops before result obtained
-                    console.log("");
                     $("#serverMsgInit").html("<h2>Program Stopped...</h2>");
                     $("#serverMsg").html("<p>It seems that TransMaxCal has stopped...@" +
                      data.done_time + "</p>");
@@ -138,7 +139,10 @@
             if (data.confirmedkill == true) {
                 console.log("pollingCall is now ", pollingCall);
                 clearInterval(pollingCall);
-                // window.close();
+                $("#serverMsgInit").html("<h2>Request Cancelled...</h2>");
+                $("#serverMsg").html("<p>You cancelled the calculation @" +
+                 data.done_time + "</p>");
+                $("#bat").html("<p>You can always submit another request :D</p>");
             }
         });
     }

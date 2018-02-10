@@ -38,13 +38,19 @@ def kill_transmaxcal():
     print(request.args)
     stop_cal = request.args.get('stopCal')
     if stop_cal == "confirmed":
-        cal_proc.kill()
-        print("calculation cancelled by user")
+        #if cal_proc: cal_proc.kill()
+        try:
+            cal_proc.kill()
+        except AttributeError:
+            # if connection between popup and server resumes
+            pass
+        finish_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        print("calculation cancelled by user @ ", finish_time)
 
         # reset global cal_proc
         cal_proc = None
 
-        return jsonify(confirmedkill = True)
+        return jsonify(confirmedkill = True, done_time = finish_time)
 
     return "kill the boy!"
 
