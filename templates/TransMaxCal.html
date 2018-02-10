@@ -20,7 +20,7 @@
 
 <body>
   <div>
-    <p>Hi!</p>
+    <p><b>Hi!</b></p>
     <p>Your computing request of <br />
      DNA-length = {{ DNA_length }}nm, <br />
      force = {{ force }}pN, <br />
@@ -30,8 +30,8 @@
     <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results.</p>
     <p>This bat will keep flying until the calculation is done!</p>
     <hr />
-    <h2 id="serverMsgInit"></h2>
-    <h1 id="serverMsg"></h1>
+    <div id="serverMsgInit"></div>
+    <div id="serverMsg">Calculating..</div>
     <div id="bat">
       <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
       <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
@@ -63,9 +63,9 @@
         });
     });
 
-    // submit parameters to octave_cal
+    // submit parameters to transmaxcal
     $(document).ready(function(){
-        $.getJSON("http://137.132.69.48:7717/octave_cal/",
+        $.getJSON("http://137.132.69.48:7717/transmaxcal/",
         {
             DNA_length: {{ DNA_length }},
             force: {{ force }},
@@ -73,13 +73,16 @@
             max_mode: {{ max_mode }}
         },
         function(data) {
-            $("#serverMsgInit").text(data.serverMsg);
+            $("#serverMsgInit").html("<h2>" + data.serverMsg +
+             "</h2>" + 
+             "<button onclick='terminateCal()'>Cancel Calculation</buton>" +
+             "<br />");
             console.log("octave_cal's data is ", data);
-        })
+        });
     });
 
     // poll the server status every 15 seconds
-    var myVar = setInterval( function() {
+    var pollingCall = setInterval( function() {
         pollServer();
     }, 15000);
 
@@ -90,12 +93,29 @@
                 $("#serverMsg").text("Calculating...");
                 console.log("check_computation_status's data is ", data);
             } else {
-                clearInterval(myVar);
-                $("#serverMsg").text("Done!");
-                $("#bat").html("<h1>Results:</h1><br />" + "<p>" + data.result.replace(/\n/g, "<br />") + "</p>");
+                clearInterval(pollingCall);
+                $("#serverMsgInit").html("<h2>Program Finished</h2>");
+                $("#serverMsg").html("<h1>Done!</h1>" + "<p>@" +
+                 data.done_time + "</p>");
+                $("#bat").html("<h1>Results:</h1><br />" + "<p>" +
+                 data.result.replace(/\n/g, "<br />") + "</p>");
                 console.log("check_computation_status's data is now", data);
             }
-        })
+        });
+    }
+
+    // click button to cancel the calculation and close popup
+    function terminateCal() {
+        $.getJSON("http://137.132.69.48:7717/kill_transmaxcal/",
+        {
+            stopCal: "confirmed",
+        },
+        function(data) {
+            if (data.confirmedkill == true) {
+                clearInterval(pollingCall);
+                window.close();
+            }
+        });
     }
 
   </script>
