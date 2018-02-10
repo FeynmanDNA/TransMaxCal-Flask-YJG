@@ -27,7 +27,7 @@
      torque = {{ torque }}pNnm, <br />
      and max-mode of {{ max_mode }} <br />
      is received by our server at {{ submit_time }}.</p>
-    <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results. How exciting!</p>
+    <p>Now TransMaxCal will process your request. It usually takes 30 minutes to return the results.</p>
     <p>This bat will keep flying until the calculation is done!</p>
     <hr />
     <h2 id="serverMsgInit"></h2>
@@ -45,6 +45,10 @@
   src="https://code.jquery.com/jquery-3.3.1.min.js"
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
+  <!--local fallback for jquery-->
+  <script>window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')</script>
+
   <script type=text/javascript>
     // click to show local server time
     $(function() {
@@ -67,7 +71,7 @@
             force: {{ force }},
             torque: {{ torque }},
             max_mode: {{ max_mode }}
-        }, 
+        },
         function(data) {
             $("#serverMsgInit").text(data.serverMsg);
             console.log("octave_cal's data is ", data);
@@ -75,21 +79,21 @@
     });
 
     // poll the server status every 15 seconds
-    var myVar = setInterval( function() { 
-        pollServer(); 
+    var myVar = setInterval( function() {
+        pollServer();
     }, 15000);
 
     function pollServer() {
-        $.getJSON("http://137.132.69.48:7717/check_computation_status/", 
+        $.getJSON("http://137.132.69.48:7717/check_computation_status/",
         function(data) {
             if (data.computationStatus == false) {
                 $("#serverMsg").text("Calculating...");
-                console.log("check_computation_statu's data is ", data);
+                console.log("check_computation_status's data is ", data);
             } else {
                 clearInterval(myVar);
                 $("#serverMsg").text("Done!");
-                $("#bat").html("<h1>Results:</h1><br />" + data.result);
-                console.log("check_computation_statu's data is now", data);
+                $("#bat").html("<h1>Results:</h1><br />" + "<p>" + data.result.replace(/\n/g, "<br />") + "</p>");
+                console.log("check_computation_status's data is now", data);
             }
         })
     }

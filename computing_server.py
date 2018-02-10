@@ -7,7 +7,7 @@ app = Flask(__name__)
 app.secret_key = 'C++Bear'
 
 # global variable to show computation status
-cal_proc = None 
+cal_proc = None
 
 @app.route('/octave_cal/')
 def octave_cal():
@@ -29,7 +29,7 @@ def octave_cal():
         stdout=subprocess.PIPE, \
         cwd='C:\\Users\\LUMICKS\\Desktop\\Artem')
 
-    return jsonify(serverMsg = "Octave Program Started") 
+    return jsonify(serverMsg = "Program Started")
 
 @app.route('/check_computation_status/')
 def check_computation_status():
