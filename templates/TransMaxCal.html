@@ -56,94 +56,142 @@
     // click to show local server time
     $(function() {
         $("#process_input").bind("click", function() {
-            $.getJSON("http://137.132.69.48:7717/jsonshowtime/",
-            function(data) {
-                $("#result").text("Localtime of our computing server is "
-                 + data.result);
-                 console.log("jsonshowtime's data is ", data);
+            $.ajax({
+                dataType: "json",
+                url: "http://137.132.69.48:7717/jsonshowtime/",
+                error:
+                function() {
+                    console.log("timeout error for show time");
+                    $("#result").text("Server connection error... try again later");
+                },
+                success:
+                function(result) {
+                    $("#result").text("Localtime of our computing server is "
+                     + result.result);
+                    console.log("jsonshowtime's result is ", result);
+                },
+                timeout: 3000 // sets timeout to 3 seconds
             });
-            var testgetJson = $.getJSON("http://137.132.69.48:7717/jsonshowtime/");
-            console.log(testgetJson);
             return false;
         });
     });
 
     // submit parameters to transmaxcal
     $(document).ready(function(){
-        $.getJSON("http://137.132.69.48:7717/transmaxcal/",
-        {
-            DNA_length: {{ DNA_length }},
-            force: {{ force }},
-            torque: {{ torque }},
-            max_mode: {{ max_mode }}
-        },
-        function(data) {
-            // check if computation from transmaxcal has started
-            if (data.computationStarted) {
-                $("#serverMsgInit").html("<h2>" + data.serverMsg +
-                 "</h2>" + 
-                 "<button onclick='terminateCal()'>Cancel Calculation</buton>" +
-                 "<br />");
-                console.log("transmaxcal's data is ", data);
-                // polling starts after sucess of ajax/data
-                // poll the server status every 15 seconds
-                // pollingCall is global variable
-                pollingCall = setInterval( function() {
-                    pollServer();
-                }, 15000);
-            } else {
-                // if tranxmaxcal fails to even start
-                console.log("TransMaxCal not started...");
-                $("#serverMsgInit").html("<h2>Program failed to start</h2>");
+        $.ajax({
+            dataType: "json",
+            url: "http://137.132.69.48:7717/transmaxcal/",
+            data:
+            {
+                DNA_length: {{ DNA_length }},
+                force: {{ force }},
+                torque: {{ torque }},
+                max_mode: {{ max_mode }}
+            },
+            error:
+            function() {
+                console.log("timeout error transmaxcal no response");
+                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
                 $("#serverMsg").html("<p>Sorry, please come back later.</p>");
-                $("#bat").html("D;");
-            }
+                $("#bat").html("...");
+            },
+            success:
+            function(data) {
+                // check if computation from transmaxcal has started
+                if (data.computationStarted) {
+                    $("#serverMsgInit").html("<h2>" + data.serverMsg +
+                     "</h2>" + 
+                     "<button onclick='terminateCal()'>Cancel Calculation</buton>" +
+                     "<br />");
+                    console.log("transmaxcal's data is ", data);
+                    // polling starts after sucess of ajax/data
+                    // poll the server status every 15 seconds
+                    // pollingCall is global variable
+                    pollingCall = setInterval( function() {
+                        pollServer();
+                    }, 15000);
+                } else {
+                    // if tranxmaxcal fails to even start
+                    console.log("TransMaxCal not started...");
+                    $("#serverMsgInit").html("<h2>Program failed to start</h2>");
+                    $("#serverMsg").html("<p>Sorry, please come back later.</p>");
+                    $("#bat").html("...");
+                }
+            },
+            timeout: 3000 // sets timeout to 3 seconds
         });
     });
 
+
     // polling function requesting json from check status route
     function pollServer() {
-        $.getJSON("http://137.132.69.48:7717/check_computation_status/",
-        function(data) {
-            if (data.computationStatus == false) {
-                $("#serverMsg").text("Calculating...");
-                console.log("check_computation_status's data is ", data);
-            } else {
+        $.ajax({
+            dataType: "json",
+            url: "http://137.132.69.48:7717/check_computation_status/",
+            error:
+            function() {
+                console.log("timeout error for polling");
+                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
+                $("#serverMsg").html("<p>Sorry, please come back later.</p>");
+                $("#bat").html("...");
                 clearInterval(pollingCall);
-                if (data.result == "") {
-                    // if TransMaxCal stops before result obtained
-                    $("#serverMsgInit").html("<h2>Program Stopped...</h2>");
-                    $("#serverMsg").html("<p>It seems that TransMaxCal has stopped...@" +
-                     data.done_time + "</p>");
-                    $("#bat").html("<p>Sorry, please try again later :D</p>");
+            },
+            success:
+            function(data) {
+                if (data.computationStatus == false) {
+                    $("#serverMsg").text("Calculating...");
+                    console.log("check_computation_status's data is ", data);
                 } else {
-                    // otherwise compuation success!
-                    $("#serverMsgInit").html("<h2>Program Finished</h2>");
-                    $("#serverMsg").html("<h1>Done!</h1>" + "<p>@" +
-                     data.done_time + "</p>");
-                    $("#bat").html("<h1>Results:</h1><br />" + "<p>" +
-                     data.result.replace(/\n/g, "<br />") + "</p>");
-                    console.log("check_computation_status's data is now", data);
+                    clearInterval(pollingCall);
+                    if (data.result == "") {
+                        // if TransMaxCal stops before result obtained
+                        $("#serverMsgInit").html("<h2>Program Stopped...</h2>");
+                        $("#serverMsg").html("<p>It seems that TransMaxCal has stopped...@" +
+                         data.done_time + "</p>");
+                        $("#bat").html("<p>Sorry, please try again later :D</p>");
+                    } else {
+                        // otherwise compuation success!
+                        $("#serverMsgInit").html("<h2>Program Finished</h2>");
+                        $("#serverMsg").html("<h1>Done!</h1>" + "<p>@" +
+                         data.done_time + "</p>");
+                        $("#bat").html("<h1>Results:</h1><br />" + "<p>" +
+                         data.result.replace(/\n/g, "<br />") + "</p>");
+                        console.log("check_computation_status's data is now", data);
+                    }
                 }
-            }
+            },
+            timeout: 3000 // sets timeout to 3 seconds
         });
     }
 
     // click button to cancel the calculation and close popup
     function terminateCal() {
-        $.getJSON("http://137.132.69.48:7717/kill_transmaxcal/",
-        {
-            stopCal: "confirmed",
-        },
-        function(data) {
-            if (data.confirmedkill == true) {
-                console.log("pollingCall is now ", pollingCall);
-                clearInterval(pollingCall);
-                $("#serverMsgInit").html("<h2>Request Cancelled...</h2>");
-                $("#serverMsg").html("<p>You cancelled the calculation @" +
-                 data.done_time + "</p>");
-                $("#bat").html("<p>You can always submit another request :D</p>");
-            }
+        $.ajax({
+            dataType: "json",
+            url: "http://137.132.69.48:7717/kill_transmaxcal/",
+            data:
+            {
+                stopCal: "confirmed",
+            },
+            error:
+            function() {
+                console.log("timeout error terminate");
+                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
+                $("#serverMsg").html("<p>Sorry, please come back later.</p>");
+                $("#bat").html("...");
+            },
+            success:
+            function(data) {
+                if (data.confirmedkill == true) {
+                    console.log("pollingCall is now ", pollingCall);
+                    clearInterval(pollingCall);
+                    $("#serverMsgInit").html("<h2>Request Cancelled...</h2>");
+                    $("#serverMsg").html("<p>You cancelled the calculation @" +
+                     data.done_time + "</p>");
+                    $("#bat").html("<p>You can always submit another request :D</p>");
+                }
+            },
+            timeout: 3000 // sets timeout to 3 seconds
         });
     }
 

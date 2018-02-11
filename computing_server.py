@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, session, redirect
+from flask import Flask, jsonify, render_template, request, session
 from time import localtime, strftime
 import subprocess
 
