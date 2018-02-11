@@ -1,0 +1,1 @@
+python computing_server.py > D:\Flask_Server_Logs\log_Feb12_2018.txt 2>&1
