@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en-sg">
+  <!--customized html, css, js by Yang Kaiyuan from Yan Jie Group 2018-->
+  <!--flask backend-->
+  <!--
+  o-O-o                  o   o           o-o     o
+    |                    |\ /|          /        |
+    |   o-o  oo o-o  o-o | O |  oo \ / O      oo |
+    |   |   | | |  |  \  |   | | |  o   \    | | |
+    o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o
+  -->
+
+<head>
+  <title>TransMaxCal-YJG</title>
+  <meta charset="UTF-8" />
+  <meta name="author" content="Yang Kaiyuan from Yan Jie Group" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+</head>
+
+<body>
+  <div>
+    <p><b>We are this popular?!</b></p>
+    <p>Yan Jie told me last time that there are "at most 20 people in the whole world" who care about this calculation.</p>
+    <p>So I just made the server listen to one request at a time.</p>
+    <p>But you can always come back later! There are only 19 other people bothered to send calculation request:D</p>
+    <hr />
+    <button id="process_input">Click to show current server local time</button>
+    <p id="result">...</p>
+    <button onclick="location.reload(true)">Check if calculator is free</button>
+    <p>...</p>
+    <button onclick="window.close()">Close window</button>
+  </div>
+
+  <script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  <!--local fallback for jquery-->
+  <script>window.jQuery || document.write('<script src="{{
+  url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')</script>
+
+  <script type=text/javascript>
+
+    // click to show local server time
+    $(function() {
+        $("#process_input").bind("click", function() {
+            $.ajax({
+                dataType: "json",
+                url: "http://137.132.69.48:7717/jsonshowtime/",
+                error:
+                function() {
+                    console.log("timeout error for show time");
+                    $("#result").text("Server connection error... try again later");
+                },
+                success:
+                function(result) {
+                    $("#result").text("Localtime of our computing server is "
+                     + result.result);
+                    console.log("jsonshowtime's result is ", result);
+                },
+                timeout: 3000 // sets timeout to 3 seconds
+            });
+            return false;
+        });
+    });
+
+  </script>
+
+</body>
+</html>

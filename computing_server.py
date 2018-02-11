@@ -75,7 +75,16 @@ def check_computation_status():
 
 @app.route('/jsontest/')
 def jsontest():
-    # print out the the request headers like user-agent etc
+    # first check if there is already a transmaxcal process
+    global cal_proc
+
+    if cal_proc is None:
+        pass
+    elif cal_proc.poll() is None:
+        # the transmaxcal subprocess is alive
+        return render_template('BlockFurReq.html')
+
+    # print out the request headers like user-agent etc
     print(request.headers)
     # for user to click to see current server time
     submit_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
