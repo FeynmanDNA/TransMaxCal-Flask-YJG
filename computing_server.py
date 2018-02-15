@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, session
+from flask import Flask, jsonify, render_template, request
 from time import localtime, strftime
 import subprocess
 import sys
@@ -20,8 +20,6 @@ class Unbuffered(object):
 sys.stdout = Unbuffered(sys.stdout)
 
 app = Flask(__name__)
-# for request and session
-app.secret_key = 'C++Bear'
 
 # global variable to show computation status
 cal_proc = None
@@ -39,11 +37,9 @@ def transmaxcal():
     global cal_proc
 
     # subprocess run the computation
-    cal_proc = subprocess.Popen([\
-        "C:\Octave\Octave-4.2.1\\bin\octave-cli.exe", "--eval", \
-        "main_DNA_force_torque_spectrum_new(%s,%s,%s,%s)" % (DNA_length, force, torque, max_mode)], \
-        stdout=subprocess.PIPE, \
-        cwd='C:\\Users\\LUMICKS\\Desktop\\Artem')
+    cal_proc = subprocess.Popen(["./TransMaxCal_v2_cpp.exe", \
+            "%s" % (DNA_length), "%s" % (force), "%s" % (torque), "%s" % (max_mode)], \
+        stdout=subprocess.PIPE)
 
     return jsonify(serverMsg = "Program Started", computationStarted = True)
 
@@ -112,7 +108,7 @@ def jsontest():
     torque = request.args.get('torque')
     max_mode = request.args.get('maxMode')
 
-    return render_template('TransMaxCal.html',
+    return render_template('TransMatCal.html',
                            submit_time = submit_time,
                            DNA_length = DNA_length,
                            force = force,
