@@ -27,7 +27,7 @@ cal_proc = None
 @app.route('/transmaxcal/')
 def transmaxcal():
     # process input from /jsontest as GET in the URL queries
-    print(request.args)
+    print("page now redirect to /transmaxcal and request.args is: ", request.args)
     DNA_length = request.args.get('DNA_length')
     force = request.args.get('force')
     torque = request.args.get('torque')
@@ -98,7 +98,7 @@ def jsontest():
         return render_template('BlockFurReq.html')
 
     # print out the request headers like user-agent etc
-    print(request.headers)
+    print("request.headers received by Flask is: ", request.headers)
     # for user to click to see current server time
     submit_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
 
@@ -107,6 +107,27 @@ def jsontest():
     force = request.args.get('force')
     torque = request.args.get('torque')
     max_mode = request.args.get('maxMode')
+
+    # to prevent empty url queries
+    try:
+        int(DNA_length)
+        float(force)
+        float(torque)
+        int(max_mode)
+    except (TypeError, ValueError):
+        print("empty or invalid  url queries detected")
+        return "please input valid parameters"
+    
+    # server-side url queries validation
+    if (int(DNA_length) <= 0 or
+        float(force) <= 0 or 
+        float(force) >= 30 or
+        float(torque) <= -30 or
+        float(torque) >= 50 or
+        int(max_mode) < 10 or
+        int(max_mode) >20):
+        print("user is entering the url queries in the pop up...")
+        return "please submit valid  parameters"
 
     return render_template('TransMatCal.html',
                            submit_time = submit_time,
