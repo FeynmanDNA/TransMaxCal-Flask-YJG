@@ -37,7 +37,7 @@ def transmaxcal():
     global cal_proc
 
     # subprocess run the computation
-    cal_proc = subprocess.Popen(["./TransMaxCal_v2_cpp.exe", \
+    cal_proc = subprocess.Popen(["C:\\Users\\LUMICKS\\Desktop\\FlaskServer\\gppCMDversionFeb19th.exe", \
             "%s" % (DNA_length), "%s" % (force), "%s" % (torque), "%s" % (max_mode)], \
         stdout=subprocess.PIPE)
 
