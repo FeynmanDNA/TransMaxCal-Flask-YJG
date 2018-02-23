@@ -3,7 +3,7 @@ from time import localtime, strftime
 import subprocess
 import sys
 
-# replace sys.stdout with some other stream like wrapper 
+# replace sys.stdout with some other stream like wrapper
 # which does a flush after every call.
 class Unbuffered(object):
    def __init__(self, stream):
@@ -72,8 +72,13 @@ def check_computation_status():
     # first call the global variable
     global cal_proc
     # process pollServer from webpage
-    # if cal_proc is not finished
-    if cal_proc is None or cal_proc.poll() is None:
+    if cal_proc is None:
+        # calculator.exe stopped prematurely
+        outs = ""
+        finish_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        return jsonify(computationStatus = True, done_time = finish_time, result = outs)
+    elif cal_proc.poll() is None:
+        # if cal_proc is not finished
         return jsonify(computationStatus = False)
     else:
         # non-block method (but .stdout.read() actually block...)
@@ -82,6 +87,7 @@ def check_computation_status():
         finish_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
 
         # reset global cal_proc
+        # only after computation status is checked is cal_proc resetted
         cal_proc = None
 
         return jsonify(computationStatus = True, done_time = finish_time, result = outs)
@@ -91,10 +97,15 @@ def jsontest():
     # first check if there is already a transmaxcal process
     global cal_proc
 
+    # cal_proc is None when Flask first start
+    # or previous calculations are finished (reset by check_computation_status)
+    # only proceed to send transmaxcal route if cal_proc is None
     if cal_proc is None:
         pass
-    elif cal_proc.poll() is None:
+    else:
         # the transmaxcal subprocess is alive
+        # OR this request is sent before
+        # check_computation_status has reset the cal_proc
         return render_template('BlockFurReq.html')
 
     # print out the request headers like user-agent etc
@@ -117,10 +128,10 @@ def jsontest():
     except (TypeError, ValueError):
         print("empty or invalid  url queries detected")
         return "please input valid parameters"
-    
+
     # server-side url queries validation
     if (int(DNA_length) <= 0 or
-        float(force) <= 0 or 
+        float(force) <= 0 or
         float(force) >= 200 or
         float(torque) <= -30 or
         float(torque) >= 50 or
