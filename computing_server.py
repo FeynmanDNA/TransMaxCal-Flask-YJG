@@ -133,8 +133,8 @@ def jsontest():
     if (int(DNA_length) <= 0 or
         float(force) <= 0 or
         float(force) >= 200 or
-        float(torque) <= -30 or
-        float(torque) >= 50 or
+        float(torque) < -30 or
+        float(torque) > 50 or
         int(max_mode) < 10 or
         int(max_mode) >20):
         print("user is entering the url queries in the pop up...")
