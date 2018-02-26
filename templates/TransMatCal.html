@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en-sg">
   <!--customized html, css, js by Yang Kaiyuan from Yan Jie Group 2018-->
-  <!--C++ program by Ladislav Hovan, based on the Matlab program by Artem Efremov-->
+  <!--C++ program by Ladislav Hovan and Artem Efremov-->
   <!--flask backend by Yang Kaiyuan and Olafs Vandans-->
   <!--
   o-O-o                  o   o           o-o     o
@@ -16,213 +16,161 @@
   <meta charset="UTF-8" />
   <meta name="author" content="Yang Kaiyuan from Yan Jie Group" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
-  <style>
-    .sortbutton {
-      background-color: white;
-      border: 2px solid #555555;
-      color: black;
-      padding: 16px 22px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      margin: 4px 2px;
-      -webkit-transition-duration: 0.4s; /* Safari */
-      transition-duration: 0.4s;
-      cursor: pointer;
-    }
-    .sortbutton:hover {
-      background-color: #555555;
-      color: white;
-    }
-  </style>
+  <link rel="shortcut icon" href="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/favicon.ico" />
+  <link rel="stylesheet" href="https://www.physics.nus.edu.sg/~biosmm/yjv2.css" />
 </head>
 
 <body>
-  <div>
-    <h3>Yan Jie Group@NUS</h3>
-    <p style="color: #3888b4;font-weight:bold;">TransMatCal Program</p>
+  <div class="container">
+    <h2>Yan Jie Group@NUS</h2>
+    <h2 style="color: #3888b4;">TransMatCal Program</h2>
     <p>Your computing request of <br />
     DNA-length = <b>{{ DNA_length }}nm</b>, <br />
     force = <b>{{ force }}pN</b>, <br />
     torque = <b>{{ torque }}pNnm</b>, <br />
     and max-mode of <b>{{ max_mode }}</b> <br />
     is received by our server at {{ submit_time }}.</p>
-    <p>The calculation usually takes less than 10 seconds.</p>
-    <hr />
+    <p>The calculation usually takes less than 30 seconds.</p>
+  <hr />
     <div id="serverMsgInit"></div>
     <div id="serverMsg">Calculating..</div>
     <div id="bat">
-      <img src="{{ url_for('static', filename='bat.gif') }}" alt="calculating..." />
+      <img src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/bat.gif" alt="calculating..." />
       <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
     </div><!--bat-->
-    <hr />
+
+    <!--placeholder for flot-->
+    <div id="placeholder" style="width:600px;height:300px"></div>
+  <hr />
     <button class="sortbutton" id="process_input">Click to show current server local time</button>
     <p id="result">...</p>
   </div>
 
-  <script
-  src="https://code.jquery.com/jquery-3.3.1.min.js"
-  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-  crossorigin="anonymous"></script>
-  <!--local fallback for jquery-->
-  <script>window.jQuery || document.write('<script src="{{
-  url_for('static', filename='jquery-3.3.1.min.js') }}">\x3C/script>')</script>
+<script
+src="https://code.jquery.com/jquery-3.3.1.min.js"
+integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+crossorigin="anonymous"></script>
+<!--local fallback for jquery-->
+<script>window.jQuery || document.write('<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery-3.3.1.min.js">\x3C/script>')</script>
 
-  <script type=text/javascript>
-    // pollingCall global variable to be used 
-    var pollingCall;
+<!--flot script-->
+<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery.flot.min.js"></script>
+<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery.flot.axislabels.js"></script>
 
-    // click to show local server time
-    $(function() {
-        $("#process_input").bind("click", function() {
-            $.ajax({
-                dataType: "json",
-                url: "http://137.132.69.48:7717/jsonshowtime/",
-                error:
-                function() {
-                    console.log("timeout error for show time");
-                    $("#result").text("Server connection error... try again later");
-                },
-                success:
-                function(result) {
-                    $("#result").text("Localtime of our computing server is "
-                     + result.result);
-                    console.log("jsonshowtime's result is ", result);
-                },
-                timeout: 3000 // sets timeout to 3 seconds
-            });
-            return false;
-        });
-    });
+<script type=text/javascript>
 
-    // submit parameters to transmaxcal
-    $(document).ready(function(){
-        $.ajax({
-            dataType: "json",
-            url: "http://137.132.69.48:7717/transmaxcal/",
-            data:
-            {
-                DNA_length: {{ DNA_length }},
-                force: {{ force }},
-                torque: {{ torque }},
-                max_mode: {{ max_mode }}
-            },
-            error:
-            function() {
-                console.log("timeout error transmaxcal no response");
-                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
-                $("#serverMsg").html("<p>Sorry, please come back later.</p>");
-                $("#bat").html("...");
-            },
-            success:
-            function(data) {
-                // check if computation from transmaxcal has started
-                if (data.computationStarted) {
-                    $("#serverMsgInit").html("<h2>" + data.serverMsg +
-                     "</h2>" + 
-                     "<button onclick='terminateCal()'>Cancel Calculation</buton>" +
-                     "<br />");
-                    console.log("transmaxcal's data is ", data);
-                    // polling starts after sucess of ajax/data
-                    console.log("pollingCall starts...");
-                    // poll the server status every 1second
-                    // pollingCall is global variable
-                    pollingCall = setInterval( function() {
-                        pollServer();
-                        console.log("pollserver +1");
-                    }, 1000);
-                } else {
-                    // if tranxmaxcal fails to even start
-                    console.log("TransMaxCal not started...");
-                    $("#serverMsgInit").html("<h2>Program failed to start</h2>");
-                    $("#serverMsg").html("<p>Sorry, please come back later.</p>");
-                    $("#bat").html("...");
-                }
-            },
-            timeout: 30000 // sets timeout to 30 seconds
-        });
-    });
+  // submit parameters to transmaxcal
+  $(document).ready(function(){
+      // first process the variable force received by /jsontest/
+      var forceFromJsontest = {{ force }};
+      // forceFromJsontest is an array [force]
+      // transform to string for /transmaxcal
+      var force = forceFromJsontest.toString();
 
+      console.log("Begin to send json to /transmaxcal");
+      $.ajax({
+          dataType: "json",
+          url: "/transmaxcal/",
+          data:
+          {
+              DNA_length: {{ DNA_length }},
+              force: force,
+              torque: {{ torque }},
+              max_mode: {{ max_mode }}
+          },
+          error:
+          function() {
+              console.log("timeout error transmaxcal no response");
+              $("#serverMsgInit").html("<h2>Server connection error...</h2>");
+              $("#serverMsg").html("<p>Sorry, please come back later.</p>");
+              $("#bat").html("...");
+          },
+          success:
+          function(data) {
+              console.log("check_computation_status's data is now", data);
+              $("#serverMsgInit").html("<h2>Program Finished</h2>");
+              $("#serverMsg").html("<h2>Done!</h2>" + "<p>@" +
+               data.done_time + "</p>");
+              $("#bat").html("<h2>Results:</h2>");
+              // process the result Array by split "=" and parseFloat
+              // dataSeries is array of array [ [x,y] ] by push
+              var dataSeries = [];
+              for (var i=0; i<data.result.length; i++) {
+                  $("#bat").append("<p>" + data.result[i].replace(/\n/g, "<br />")+ "</p>");
+                  dataArray = data.result[i].split("=");
+                  forceParse = parseFloat(dataArray[1]);
+                  extParse = parseFloat(dataArray[3]);
+                  dataSeries.push([forceParse, extParse]);
+              }
+              console.log("dataSeries is ", dataSeries);
+              // $.plot(placeholder, data, options)
+              // data [series1, series2, ...]
+              var dataset = [
+                  {label:"Torque =" + {{ torque }} + "pN.nm", data:dataSeries},
+              ];
 
-    // polling function requesting json from check status route
-    function pollServer() {
-        $.ajax({
-            dataType: "json",
-            url: "http://137.132.69.48:7717/check_computation_status/",
-            error:
-            function() {
-                console.log("timeout error for polling");
-                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
-                console.log("#serverMsgInit changed.");
-                $("#serverMsg").html("<p>Sorry, please come back later.</p>");
-                console.log("#serverMsg changed.");
-                $("#bat").html("...");
-                console.log("#bat changed.");
-                clearInterval(pollingCall);
-            },
-            success:
-            function(data) {
-                if (data.computationStatus == false) {
-                    $("#serverMsg").text("Calculating...");
-                    console.log("check_computation_status's data is ", data);
-                } else {
-                    clearInterval(pollingCall);
-                    console.log("pollingCall stopped");
-                    if (data.result == "") {
-                        // if TransMaxCal stops before result obtained
-                        $("#serverMsgInit").html("<h2>Program Stopped...</h2>");
-                        $("#serverMsg").html("<p>It seems that TransMaxCal has stopped...@" +
-                         data.done_time + "</p>");
-                        $("#bat").html("<p>Sorry, please try again later :D</p>");
-                    } else {
-                        // otherwise compuation success!
-                        $("#serverMsgInit").html("<h2>Program Finished</h2>");
-                        $("#serverMsg").html("<h1>Done!</h1>" + "<p>@" +
-                         data.done_time + "</p>");
-                        $("#bat").html("<h1>Results:</h1><br />" + "<p>" +
-                         data.result.replace(/\n/g, "<br />") + "</p>");
-                        console.log("check_computation_status's data is now", data);
-                    }
-                }
-            },
-            timeout: 30000 // sets timeout to 30 seconds
-        });
-    }
+              // options for flot graph
+              var options = {
+                  series: {
+                      lines: {show: true},
+                      points: {radius:3, show:true}
+                  },
+                  xaxis: {
+                      axisLabel: "Force(pN)",
+                      axisLabelUseCanvas: true,
+                      axisLabelFontSizePixels: 12,
+                      axisLabelFontFamily: 'Verdana, Arial',
+                      axisLabelPadding: 10
+                  },
+                  yaxis: {
+                      axisLabel: "Relative Extension",
+                      axisLabelUseCanvas: true,
+                      axisLabelFontSizePixels: 12,
+                      axisLabelFontFamily: 'Verdana, Arial',
+                      axisLabelPadding: 3,
+                  },
+                  legend: {
+                      position: "nw"
+                  },
+                  grid: {
+                      hoverable: true,
+                      borderWidth: 2,
+                      borderColor: "#633200",
+                  },
+              };
+              $.plot($("#placeholder"),
+                  dataset,
+                  options
+              );
+          },
+          timeout: 55000 // sets timeout to 55 seconds
+      });
+  });
 
-    // click button to cancel the calculation and close popup
-    function terminateCal() {
-        $.ajax({
-            dataType: "json",
-            url: "http://137.132.69.48:7717/kill_transmaxcal/",
-            data:
-            {
-                stopCal: "confirmed",
-            },
-            error:
-            function() {
-                console.log("timeout error terminate");
-                $("#serverMsgInit").html("<h2>Server connection error...</h2>");
-                $("#serverMsg").html("<p>Sorry, please come back later.</p>");
-                $("#bat").html("...");
-            },
-            success:
-            function(data) {
-                if (data.confirmedkill == true) {
-                    console.log("pollingCall is now ", pollingCall);
-                    clearInterval(pollingCall);
-                    $("#serverMsgInit").html("<h2>Request Cancelled...</h2>");
-                    $("#serverMsg").html("<p>You cancelled the calculation @" +
-                     data.done_time + "</p>");
-                    $("#bat").html("<p>You can always submit another request :D</p>");
-                }
-            },
-            timeout: 30000 // sets timeout to 30 seconds
-        });
-    }
+  // click to show local server time
+  $(function() {
+      $("#process_input").bind("click", function() {
+          $.ajax({
+              dataType: "json",
+              url: "/jsonshowtime/",
+              error:
+              function() {
+                  console.log("timeout error for show time");
+                  $("#result").text("Server connection error... try again later");
+              },
+              success:
+              function(result) {
+                  $("#result").text("Localtime of our computing server is "
+                   + result.result);
+                  console.log("jsonshowtime's result is ", result);
+              },
+              timeout: 3000 // sets timeout to 3 seconds
+          });
+          return false;
+      });
+  });
+</script>
 
-  </script>
 
 </body>
 </html>
