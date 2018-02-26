@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template, request
-from time import localtime, strftime
+from time import localtime, strftime, time
 import subprocess
 import sys
 
@@ -90,17 +90,28 @@ def transmaxcal():
 
     # initiate outs as empty list
     outs = []
+    cal_procs = []
+
+    # record the time taken for calculation
+    cal_start = int(round(time() * 1000))
+
     # force is a list like ['1', '3.3', '5']
     for i in force:
         cal_proc = subprocess.Popen(["./artem_update.out", \
                    "%s" % (DNA_length), "%s" % (i), "%s" % (torque), "%s" % (max_mode)], \
                    stdout=subprocess.PIPE)
+        cal_procs.append(cal_proc)
+    for cal_proc in cal_procs:
         outs.append(cal_proc.stdout.read().decode('ascii'))
         print("cal_proc now is ", cal_proc)
 
+    # elapsed time is in sec
+    cal_end = int(round(time() * 1000))
+    cal_elapsed = (cal_end-cal_start)/1000
+
     finish_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
     print("Now /transmaxcal/ returns the json back to page")
-    return jsonify(done_time = finish_time, result = outs)
+    return jsonify(done_time = finish_time, elapsed_time = cal_elapsed, result = outs)
 
 @app.route('/jsonshowtime/')
 def jsonshowtime():

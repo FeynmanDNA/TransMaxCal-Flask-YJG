@@ -89,7 +89,8 @@ crossorigin="anonymous"></script>
           function(data) {
               console.log("check_computation_status's data is now", data);
               $("#serverMsgInit").html("<h2>Program Finished</h2>");
-              $("#serverMsg").html("<h2>Done!</h2>" + "<p>@" +
+              $("#serverMsg").html("<h2>Done!</h2>" + "<p>Elapsed Time = " +
+                  data.elapsed_time + "sec<br /> @" +
                data.done_time + "</p>");
               $("#bat").html("<h2>Results:</h2>");
               // process the result Array by split "=" and parseFloat
