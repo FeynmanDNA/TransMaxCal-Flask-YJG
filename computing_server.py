@@ -97,7 +97,7 @@ def transmaxcal():
 
     # force is a list like ['1', '3.3', '5']
     for i in force:
-        cal_proc = subprocess.Popen(["./artem_update.out", \
+        cal_proc = subprocess.Popen(["./Bare-DNA.out", \
                    "%s" % (DNA_length), "%s" % (i), "%s" % (torque), "%s" % (max_mode)], \
                    stdout=subprocess.PIPE)
         cal_procs.append(cal_proc)
