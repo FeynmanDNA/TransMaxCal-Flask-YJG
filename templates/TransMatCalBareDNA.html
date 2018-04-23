@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en-sg">
+  <!--customized html, css, js by Yang Kaiyuan from Yan Jie Group 2018-->
+  <!--C++ program by Ladislav Hovan and Artem Efremov-->
+  <!--flask backend by Yang Kaiyuan and Olafs Vandans-->
+  <!--
+  o-O-o                  o   o           o-o     o
+    |                    |\ /|          /        |
+    |   o-o  oo o-o  o-o | O |  oo \ / O      oo |
+    |   |   | | |  |  \  |   | | |  o   \    | | |
+    o   o   o-o-o  o o-o o   o o-o-/ \   o-o o-o-o
+  -->
+
+<head>
+  <title>Bare_DNA_Cal-YJG</title>
+  <meta charset="UTF-8" />
+  <meta name="author" content="Yang Kaiyuan from Yan Jie Group" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/favicon.ico" />
+  <link rel="stylesheet" href="https://www.physics.nus.edu.sg/~biosmm/yjv2.css" />
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-48967212-3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-48967212-3');
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Yan Jie Group@NUS</h2>
+    <h2 style="color: #3888b4;">Bare DNA Calculator</h2>
+    <p>Your computing request of <br />
+    DNA-length = <b>{{ DNA_length }}nm</b>, <br />
+    force = <b>{{ force }}pN</b>, <br />
+    torque = <b>{{ torque }}pNnm</b>, <br />
+    and max-mode of <b>{{ max_mode }}</b> <br />
+    is received by our server at {{ submit_time }}.</p>
+    <p>The calculation usually takes less than 30 seconds.</p>
+  <hr />
+    <div id="serverMsgInit"></div>
+    <div id="serverMsg">Calculating..</div>
+    <div id="bat">
+      <img src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/bat.gif" alt="calculating..." />
+      <!-- from CC https://giphy.com/gifs/art-pixel-drawing-h9zd0FSIbcU5q-->
+    </div><!--bat-->
+
+    <!--placeholder for flot-->
+    <div id="placeholder" style="width:600px;height:300px"></div>
+  <hr />
+    <button class="sortbutton" id="process_input">Click to show current server local time</button>
+    <p id="result">...</p>
+  </div>
+
+<script
+src="https://code.jquery.com/jquery-3.3.1.min.js"
+integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+crossorigin="anonymous"></script>
+<!--local fallback for jquery-->
+<script>window.jQuery || document.write('<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery-3.3.1.min.js">\x3C/script>')</script>
+
+<!--flot script-->
+<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery.flot.min.js"></script>
+<script src="https://www.physics.nus.edu.sg/~biosmm/static_for_calculator/jquery.flot.axislabels.js"></script>
+
+<script type=text/javascript>
+
+  // submit parameters to transmaxcal_BareDNA
+  $(document).ready(function(){
+      // first process the variable force received by /Bare_DNA_Cal/
+      var forceFromBare_DNA_Cal = {{ force }};
+      // forceFromBare_DNA_Cal is an array [force]
+      // transform to string for /transmaxcal_BareDNA
+      var force = forceFromBare_DNA_Cal.toString();
+
+      console.log("Begin to send json to /transmaxcal_BareDNA");
+      $.ajax({
+          dataType: "json",
+          url: "/transmaxcal_BareDNA/",
+          data:
+          {
+              DNA_length: {{ DNA_length }},
+              force: force,
+              torque: {{ torque }},
+              max_mode: {{ max_mode }}
+          },
+          error:
+          function() {
+              console.log("timeout error transmaxcal_BareDNA no response");
+              $("#serverMsgInit").html("<h2>Server connection error...</h2>");
+              $("#serverMsg").html("<p>Sorry, please come back later.</p>");
+              $("#bat").html("...");
+          },
+          success:
+          function(data) {
+              console.log("Bare_DNA_Cal's data is now", data);
+              $("#serverMsgInit").html("<h2>Program Finished</h2>");
+              $("#serverMsg").html("<h2>Done!</h2>" + "<p>Elapsed Time = " +
+                  data.elapsed_time + "sec<br /> @" +
+               data.done_time + "</p>");
+              $("#bat").html("<h2>Results:</h2>");
+              // process the result Array by split "=" and parseFloat
+              // dataSeries is array of array [ [x,y] ] by push
+              var dataSeries = [];
+              for (var i=0; i<data.result.length; i++) {
+                  $("#bat").append("<p>" + data.result[i].replace(/\n/g, "<br />")+ "</p>");
+                  dataArray = data.result[i].split("=");
+                  forceParse = parseFloat(dataArray[1]);
+                  extParse = parseFloat(dataArray[3]);
+                  dataSeries.push([forceParse, extParse]);
+              }
+              console.log("dataSeries is ", dataSeries);
+              // $.plot(placeholder, data, options)
+              // data [series1, series2, ...]
+              var dataset = [
+                  {label:"Torque =" + {{ torque }} + "pN.nm", data:dataSeries},
+              ];
+
+              // options for flot graph
+              var options = {
+                  series: {
+                      lines: {show: true},
+                      points: {radius:3, show:true}
+                  },
+                  xaxis: {
+                      axisLabel: "Force(pN)",
+                      axisLabelUseCanvas: true,
+                      axisLabelFontSizePixels: 12,
+                      axisLabelFontFamily: 'Verdana, Arial',
+                      axisLabelPadding: 10
+                  },
+                  yaxis: {
+                      axisLabel: "Relative Extension",
+                      axisLabelUseCanvas: true,
+                      axisLabelFontSizePixels: 12,
+                      axisLabelFontFamily: 'Verdana, Arial',
+                      axisLabelPadding: 3,
+                  },
+                  legend: {
+                      position: "nw"
+                  },
+                  grid: {
+                      hoverable: true,
+                      borderWidth: 2,
+                      borderColor: "#633200",
+                  },
+              };
+              $.plot($("#placeholder"),
+                  dataset,
+                  options
+              );
+          },
+          timeout: 55000 // sets timeout to 55 seconds
+      });
+  });
+
+  // click to show local server time
+  $(function() {
+      $("#process_input").bind("click", function() {
+          $.ajax({
+              dataType: "json",
+              url: "/jsonshowtime/",
+              error:
+              function() {
+                  console.log("timeout error for show time");
+                  $("#result").text("Server connection error... try again later");
+              },
+              success:
+              function(result) {
+                  $("#result").text("Localtime of our computing server is "
+                   + result.result);
+                  console.log("jsonshowtime's result is ", result);
+              },
+              timeout: 3000 // sets timeout to 3 seconds
+          });
+          return false;
+      });
+  });
+</script>
+
+
+</body>
+</html>

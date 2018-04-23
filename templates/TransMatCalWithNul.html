@@ -12,7 +12,7 @@
   -->
 
 <head>
-  <title>TransMatCal-YJG</title>
+  <title>With_Nul_Cal-YJG</title>
   <meta charset="UTF-8" />
   <meta name="author" content="Yang Kaiyuan from Yan Jie Group" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,11 +32,12 @@
 <body>
   <div class="container">
     <h2>Yan Jie Group@NUS</h2>
-    <h2 style="color: #3888b4;">TransMatCal Program</h2>
+    <h2 style="color: #3888b4;">DNA-Nucleosome Calculator</h2>
     <p>Your computing request of <br />
     DNA-length = <b>{{ DNA_length }}nm</b>, <br />
     force = <b>{{ force }}pN</b>, <br />
     torque = <b>{{ torque }}pNnm</b>, <br />
+    protein energy = <b>{{ protein_E }}kB*T</b>, <br />
     and max-mode of <b>{{ max_mode }}</b> <br />
     is received by our server at {{ submit_time }}.</p>
     <p>The calculation usually takes less than 30 seconds.</p>
@@ -68,48 +69,50 @@ crossorigin="anonymous"></script>
 
 <script type=text/javascript>
 
-  // submit parameters to transmaxcal
+  // submit parameters to transmaxcal_WithNul
   $(document).ready(function(){
-      // first process the variable force received by /jsontest/
-      var forceFromJsontest = {{ force }};
-      // forceFromJsontest is an array [force]
-      // transform to string for /transmaxcal
-      var force = forceFromJsontest.toString();
+      // first process the variable force received by /With_Nul_Cal/
+      var forceFromWith_Nul_Cal = {{ force }};
+      // forceFromWith_Nul_Cal is an array [force]
+      // transform to string for /transmaxcal_WithNul
+      var force = forceFromWith_Nul_Cal.toString();
 
-      console.log("Begin to send json to /transmaxcal");
+      console.log("Begin to send json to /transmaxcal_WithNul");
       $.ajax({
           dataType: "json",
-          url: "/transmaxcal/",
+          url: "/transmaxcal_WithNul/",
           data:
           {
               DNA_length: {{ DNA_length }},
               force: force,
               torque: {{ torque }},
+              protein_E: {{ protein_E }},
               max_mode: {{ max_mode }}
           },
           error:
           function() {
-              console.log("timeout error transmaxcal no response");
+              console.log("timeout error transmaxcal_WithNul no response");
               $("#serverMsgInit").html("<h2>Server connection error...</h2>");
               $("#serverMsg").html("<p>Sorry, please come back later.</p>");
               $("#bat").html("...");
           },
           success:
           function(data) {
-              console.log("check_computation_status's data is now", data);
+              console.log("With_Nul_Cal's data is now", data);
               $("#serverMsgInit").html("<h2>Program Finished</h2>");
               $("#serverMsg").html("<h2>Done!</h2>" + "<p>Elapsed Time = " +
                   data.elapsed_time + "sec<br /> @" +
                data.done_time + "</p>");
               $("#bat").html("<h2>Results:</h2>");
               // process the result Array by split "=" and parseFloat
+              // now Force is [2], ext is [6]
               // dataSeries is array of array [ [x,y] ] by push
               var dataSeries = [];
               for (var i=0; i<data.result.length; i++) {
                   $("#bat").append("<p>" + data.result[i].replace(/\n/g, "<br />")+ "</p>");
                   dataArray = data.result[i].split("=");
-                  forceParse = parseFloat(dataArray[1]);
-                  extParse = parseFloat(dataArray[3]);
+                  forceParse = parseFloat(dataArray[2]);
+                  extParse = parseFloat(dataArray[6]);
                   dataSeries.push([forceParse, extParse]);
               }
               console.log("dataSeries is ", dataSeries);
