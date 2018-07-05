@@ -223,5 +223,5 @@ def jsonshowtime():
     return jsonify(result = time_json)
 
 if __name__ == "__main__":
-    app.run(host = "0.0.0.0", port = 7717, threaded=True)
+    app.run()
 
